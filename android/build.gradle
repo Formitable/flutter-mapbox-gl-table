@@ -44,6 +44,10 @@ android {
         minSdkVersion 20
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+
+        manifestPlaceholders = [
+            'flutterEmbedding': '1'
+        ]
     }
     lintOptions {
         disable 'InvalidPackage'
