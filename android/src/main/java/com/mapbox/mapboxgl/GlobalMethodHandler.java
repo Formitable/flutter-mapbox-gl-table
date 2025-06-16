@@ -3,13 +3,11 @@ package com.mapbox.mapboxgl;
 import android.content.Context;
 import android.util.Log;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import com.mapbox.mapboxsdk.net.ConnectivityReceiver;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.common.PluginRegistry;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -26,14 +24,10 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
   private static final int BUFFER_SIZE = 1024 * 2;
   @NonNull private final Context context;
   @NonNull private final BinaryMessenger messenger;
-  @Nullable private PluginRegistry.Registrar registrar;
-  @Nullable private FlutterPlugin.FlutterAssets flutterAssets;
+  @NonNull private final FlutterPlugin.FlutterAssets flutterAssets;
 
-  GlobalMethodHandler(@NonNull PluginRegistry.Registrar registrar) {
-    this.registrar = registrar;
-    this.context = registrar.activeContext();
-    this.messenger = registrar.messenger();
-  }
+  // Remove the old v1 embedding constructor
+  // GlobalMethodHandler(@NonNull PluginRegistry.Registrar registrar) - REMOVED
 
   GlobalMethodHandler(@NonNull FlutterPlugin.FlutterPluginBinding binding) {
     this.context = binding.getApplicationContext();
@@ -88,7 +82,7 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
         break;
       case "setOfflineTileCountLimit":
         OfflineManagerUtils.setOfflineTileCountLimit(
-            result, context, methodCall.<Number>argument("limit").longValue());
+                result, context, methodCall.<Number>argument("limit").longValue());
         break;
       case "setHttpHeaders":
         Map<String, String> headers = (Map<String, String>) methodCall.argument("headers");
@@ -102,11 +96,11 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
 
         // Prepare args
         OfflineChannelHandlerImpl channelHandler =
-            new OfflineChannelHandlerImpl(messenger, channelName);
+                new OfflineChannelHandlerImpl(messenger, channelName);
 
         // Start downloading
         OfflineManagerUtils.downloadRegion(
-            result, context, definitionMap, metadataMap, channelHandler);
+                result, context, definitionMap, metadataMap, channelHandler);
         break;
       case "getListOfRegions":
         OfflineManagerUtils.regionsList(result, context);
@@ -115,11 +109,11 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
         // Get download region arguments from caller
         Map<String, Object> metadata = (Map<String, Object>) methodCall.argument("metadata");
         OfflineManagerUtils.updateRegionMetadata(
-            result, context, methodCall.<Number>argument("id").longValue(), metadata);
+                result, context, methodCall.<Number>argument("id").longValue(), metadata);
         break;
       case "deleteOfflineRegion":
         OfflineManagerUtils.deleteRegion(
-            result, context, methodCall.<Number>argument("id").longValue());
+                result, context, methodCall.<Number>argument("id").longValue());
         break;
       default:
         result.notImplemented();
@@ -130,7 +124,7 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
   private void installOfflineMapTiles(String tilesDb) {
     final File dest = new File(context.getFilesDir(), DATABASE_NAME);
     try (InputStream input = openTilesDbFile(tilesDb);
-        OutputStream output = new FileOutputStream(dest)) {
+         OutputStream output = new FileOutputStream(dest)) {
       copy(input, output);
     } catch (IOException e) {
       e.printStackTrace();
@@ -141,14 +135,8 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
     if (tilesDb.startsWith("/")) { // Absolute path.
       return new FileInputStream(new File(tilesDb));
     } else {
-      String assetKey;
-      if (registrar != null) {
-        assetKey = registrar.lookupKeyForAsset(tilesDb);
-      } else if (flutterAssets != null) {
-        assetKey = flutterAssets.getAssetFilePathByName(tilesDb);
-      } else {
-        throw new IllegalStateException();
-      }
+      // Use only the v2 embedding approach
+      String assetKey = flutterAssets.getAssetFilePathByName(tilesDb);
       return context.getAssets().open(assetKey);
     }
   }

@@ -1,9 +1,3 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mapbox.mapboxgl">
-
-    <application>
-        <meta-data
-            android:name="flutterEmbedding"
-            android:value="1" />
-    </application>
+  package="com.mapbox.mapboxgl">
 </manifest>
